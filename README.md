@@ -5,43 +5,108 @@
 <a href="https://github.com/hauke-cloud/readme-management" target="_blank"><img src="https://img.shields.io/badge/template-default-orange" alt="Repository type - default" style="display: block;" /></a>
 
 
-# Template Repository
+# database-iot-gorm
 
 
 <img src="https://raw.githubusercontent.com/hauke-cloud/.github/main/resources/img/organisation-logo-small.png" alt="hauke.cloud logo" width="109" height="123" align="right">
 
 
-Template repository for hauke.cloud projects
+A Go package providing GORM models and database migrations for IoT sensor data storage. This package contains reusable database models for various sensor types including moisture sensors, valves, water level sensors, and room sensors.
 
+## Features
 
+- **GORM Models**: Pre-defined models for:
+  - Devices (base model for all sensor types)
+  - Battery status
+  - Link quality
+  - Moisture measurements
+  - Valve measurements
+  - Water level measurements
+  - Room measurements
+
+- **Database Migrations**: SQL migrations for PostgreSQL using golang-migrate
+  - Common tables (devices, batteries, link_qualities)
+  - Sensor-specific tables (moisture_measurements, valve_measurements, water_level_measurements, room_measurements)
+
+- **Selective Migration**: Run migrations only for the sensor types you need
 
 
 ## 🚀 Getting started
-To get started, you need to clone the repository. Follow the steps below:
 
-### 1. Clone the repository
-
-Use the following command to clone the repository:
+### Installation
 
 ```bash
-git clone https://github.com/hauke-cloud/template-repository.git
+go get github.com/hauke-cloud/database-iot-gorm
 ```
 
-### 2. Navigate to the repository directory
+### Import the package
 
-Once the repository is cloned, navigate to the directory:
-
-```bash
-cd template-repository
+```go
+import databaseiotgorm "github.com/hauke-cloud/database-iot-gorm"
 ```
 
-### 3. Check the content
+### Run migrations
 
-```bash
-ls -la
+```go
+import (
+    "gorm.io/gorm"
+    "go.uber.org/zap"
+    databaseiotgorm "github.com/hauke-cloud/database-iot-gorm"
+)
+
+// Initialize your GORM database connection
+var db *gorm.DB
+var logger *zap.Logger
+
+// Run migrations for specific sensor types
+sensorTypes := []string{"moisture", "valve", "water_level", "room"}
+err := databaseiotgorm.RunMigrationsForSensorTypes(db, sensorTypes, logger)
+if err != nil {
+    // Handle error
+}
 ```
 
-This will display all the files and directories in the cloned repository.
+### Use the models
+
+```go
+// Create a device
+device := databaseiotgorm.Device{
+    DeviceID:   "moisture-sensor-01",
+    DeviceName: "Garden Moisture Sensor",
+    SensorType: "moisture",
+    ShortAddr:  "0xBF16",
+    IEEEAddr:   "0x00124b001234abcd",
+}
+db.Create(&device)
+
+// Create a measurement
+measurement := databaseiotgorm.MoistureMeasurement{
+    DeviceID:    device.ID,
+    Timestamp:   time.Now(),
+    Temperature: &temperature,
+    Humidity:    &humidity,
+}
+db.Create(&measurement)
+```
+
+## Available Models
+
+- `Device` - Base device information
+- `Battery` - Battery status tracking
+- `LinkQuality` - Zigbee link quality tracking
+- `MoistureMeasurement` - Soil moisture and temperature
+- `ValveMeasurement` - Irrigation valve status and metrics
+- `WaterLevelMeasurement` - Water level readings
+- `RoomMeasurement` - Room temperature and humidity
+
+## Migration Types
+
+The package supports selective migration based on sensor types:
+- `common` - Always runs (devices, batteries, link_qualities tables)
+- `moisture` - Moisture sensor measurements
+- `valve` - Valve sensor measurements
+- `water_level` - Water level sensor measurements
+- `room` - Room sensor measurements
 
 
 
